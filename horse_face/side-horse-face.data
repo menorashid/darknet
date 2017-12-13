@@ -1,0 +1,6 @@
+classes= 1
+train= ../data/horse_data_cleaned_yolo/train_side_face.txt
+test= ../data/horse_data_cleaned_yolo/test_side_face.txt
+valid= ../data/horse_data_cleaned_yolo/test_side_face.txt
+names= /home/maheenrashid/eccv_18/darknet/horse_face/side-horse-face.names
+backup= ../experiments/yolo_side_horse_face_pascal

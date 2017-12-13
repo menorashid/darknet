@@ -58,7 +58,11 @@ void train_detector(char *datacfg, char *cfgfile, char *weightfile, int *gpus, i
     network net = nets[0];
 
     int imgs = net.batch * net.subdivisions * ngpus;
+    *net.seen = 0;
     printf("Learning Rate: %g, Momentum: %g, Decay: %g\n", net.learning_rate, net.momentum, net.decay);
+    // printf("net seen: %d, batch: %d, subdivisions: %d\n", *net.seen, net.batch, net.subdivisions);
+    // printf("net imgs: %d, batch: %d\n", imgs, get_current_batch(net));
+    
     data train, buffer;
 
     layer l = net.layers[net.n - 1];
@@ -272,6 +276,8 @@ void validate_detector(char *datacfg, char *cfgfile, char *weightfile)
 
     layer l = net.layers[net.n-1];
     int classes = l.classes;
+    printf("%d\n",classes);
+    printf("%s\n",name_list);
 
     char buff[1024];
     char *type = option_find_str(options, "eval", "voc");
@@ -291,10 +297,13 @@ void validate_detector(char *datacfg, char *cfgfile, char *weightfile)
         classes = 200;
     } else {
         fps = calloc(classes, sizeof(FILE *));
+
         for(j = 0; j < classes; ++j){
+            printf("%d %d\n",j,classes);
             snprintf(buff, 1024, "%s/%s%s.txt", prefix, base, names[j]);
             fps[j] = fopen(buff, "w");
         }
+        // printf("%d\n",classes);
     }
 
 
