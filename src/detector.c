@@ -431,7 +431,7 @@ void validate_detector_recall(char *datacfg, char *cfgfile, char *weightfile)
         find_replace(labelpath, "JPEGImages", "labels", labelpath);
         find_replace(labelpath, ".jpg", ".txt", labelpath);
         find_replace(labelpath, ".JPEG", ".txt", labelpath);
-	find_replace(labelpath, ".png", ".txt", labelpath);
+	   find_replace(labelpath, ".png", ".txt", labelpath);
 
         int num_labels = 0;
         box_label *truth = read_boxes(labelpath, &num_labels);
@@ -468,6 +468,11 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filenam
     list *options = read_data_cfg(datacfg);
     char *name_list = option_find_str(options, "names", "data/names.list");
     char **names = get_labels(name_list);
+    char *result_dir = option_find_str(options, "result_dir","results/");
+    char *data_dir =  option_find_str(options, "data_dir","data/");
+    printf("%s\n",result_dir);
+    mkdir(result_dir,ACCESSPERMS);
+    printf("%s\n",data_dir);
 
     image **alphabet = load_alphabet();
     network net = parse_network_cfg_custom(cfgfile, 1);
@@ -507,16 +512,23 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filenam
         get_region_boxes(l, 1, 1, thresh, probs, boxes, 0, 0);
         if (nms) do_nms_sort(boxes, probs, l.w*l.h*l.n, l.classes, nms);
         draw_detections(im, l.w*l.h*l.n, thresh, boxes, probs, names, alphabet, l.classes);
-        save_image(im, "predictions");
-        show_image(im, "predictions");
+
+        char labelpath[4096];
+        find_replace(input, data_dir, result_dir, labelpath);
+        find_replace(labelpath, ".jpg", "", labelpath);
+        // printf("%s\n",input);
+        // printf("%s\n",labelpath);
+        
+        save_image(im, labelpath);
+        // show_image(im, "predictions");
 
         free_image(im);
         free_image(sized);
         free(boxes);
         free_ptrs((void **)probs, l.w*l.h*l.n);
 #ifdef OPENCV
-        cvWaitKey(0);
-        cvDestroyAllWindows();
+        // cvWaitKey(0);
+        // cvDestroyAllWindows();
 #endif
         if (filename) break;
     }
