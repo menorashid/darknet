@@ -32,7 +32,9 @@ void train_detector(char *datacfg, char *cfgfile, char *weightfile, int *gpus, i
     list *options = read_data_cfg(datacfg);
     char *train_images = option_find_str(options, "train", "data/train.list");
     char *backup_directory = option_find_str(options, "backup", "/backup/");
-
+    printf("%s\n",backup_directory );
+    mkdir(backup_directory,ACCESSPERMS);
+    
     srand(time(0));
     char *base = basecfg(cfgfile);
     printf("%s\n", base);
@@ -156,7 +158,7 @@ void train_detector(char *datacfg, char *cfgfile, char *weightfile, int *gpus, i
 
         i = get_current_batch(net);
         printf("%d: %f, %f avg, %f rate, %lf seconds, %d images\n", get_current_batch(net), loss, avg_loss, get_current_rate(net), sec(clock()-time), i*imgs);
-		if (i % 1000 == 0 || (i < 1000 && i % 100 == 0)) {
+		if (i % 1000 == 0 || (i < 2000 && i % 100 == 0)) {
 #ifdef GPU
 			if (ngpus != 1) sync_nets(nets, ngpus, 0);
 #endif
@@ -534,6 +536,108 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filenam
     }
 }
 
+void test_detector_bbox(char *datacfg, char *cfgfile, char *weightfile, char *filename, float thresh)
+{
+    list *options = read_data_cfg(datacfg);
+    char *name_list = option_find_str(options, "names", "data/names.list");
+    char **names = get_labels(name_list);
+    char *result_dir = option_find_str(options, "result_dir","results/");
+    char *data_dir =  option_find_str(options, "data_dir","data/");
+    // printf("%s\n",result_dir);
+
+    mkdir(result_dir,ACCESSPERMS);
+    // printf("%s\n",data_dir);
+
+    image **alphabet = load_alphabet();
+    network net = parse_network_cfg_custom(cfgfile, 1);
+    if(weightfile){
+        load_weights(&net, weightfile);
+    }
+    set_batch_network(&net, 1);
+    srand(2222222);
+    clock_t time;
+    char buff[256];
+    char *input = buff;
+    int j;
+    float nms=.4;
+    // printf("%s\n","hello");
+    // printf("%s %d %d\n","hello",net.w,net.h);
+
+    while(1){
+        if(filename){
+            strncpy(input, filename, 256);
+            if (input[strlen(input) - 1] == 0x0d) input[strlen(input) - 1] = 0;
+        } else {
+            input = fgets(input, 256, stdin);
+            if(!input) return;
+            strtok(input, "\n");
+        }
+        image im = load_image_color(input,0,0);
+        image sized = resize_image(im, net.w, net.h);
+        layer l = net.layers[net.n-1];
+
+        box *boxes = calloc(l.w*l.h*l.n, sizeof(box));
+        float **probs = calloc(l.w*l.h*l.n, sizeof(float *));
+        for(j = 0; j < l.w*l.h*l.n; ++j) probs[j] = calloc(l.classes, sizeof(float *));
+
+        float *X = sized.data;
+        time=clock();
+        network_predict(net, X);
+        get_region_boxes(l, 1, 1, thresh, probs, boxes, 0, 0);
+        if (nms) do_nms_sort(boxes, probs, l.w*l.h*l.n, l.classes, nms);
+
+        // draw_detections(im, l.w*l.h*l.n, thresh, boxes, probs, names, alphabet, l.classes);
+
+
+        char labelpath[4096];
+        find_replace(input, data_dir, result_dir, labelpath);
+        find_replace(labelpath, ".jpg", ".txt", labelpath);
+        printf("%s\n",input);
+        // printf("%s\n",labelpath);
+        
+        FILE * fp;
+        fp = fopen (labelpath,"w");
+
+
+
+        int i;
+        int num = l.w*l.h*l.n;
+        for(i = 0; i < num; ++i){
+            int class = max_index(probs[i], l.classes);
+            float prob = probs[i][class];
+            if(prob > thresh){
+                box b = boxes[i];
+
+                int left  = (b.x-b.w/2.)*im.w;
+                int right = (b.x+b.w/2.)*im.w;
+                int top   = (b.y-b.h/2.)*im.h;
+                int bot   = (b.y+b.h/2.)*im.h;
+
+                if(left < 0) left = 0;
+                if(right > im.w-1) right = im.w-1;
+                if(top < 0) top = 0;
+                if(bot > im.h-1) bot = im.h-1;
+                printf("%s: %.0f%%\n", names[class], prob*100);
+                fprintf(fp, "%d %.2f %d %d %d %d\n", class, prob,left,right,top,bot);
+            }
+        }
+
+        fclose (fp);
+
+
+        free_image(im);
+        free_image(sized);
+        free(boxes);
+        free_ptrs((void **)probs, l.w*l.h*l.n);
+#ifdef OPENCV
+        // cvWaitKey(0);
+        // cvDestroyAllWindows();
+#endif
+        if (filename) break;
+    }
+}
+
+
 void run_detector(int argc, char **argv)
 {
 	char *out_filename = find_char_arg(argc, argv, "-out_filename", 0);
@@ -580,6 +684,7 @@ void run_detector(int argc, char **argv)
     else if(0==strcmp(argv[2], "train")) train_detector(datacfg, cfg, weights, gpus, ngpus, clear);
     else if(0==strcmp(argv[2], "valid")) validate_detector(datacfg, cfg, weights);
     else if(0==strcmp(argv[2], "recall")) validate_detector_recall(datacfg, cfg, weights);
+    else if(0==strcmp(argv[2], "test_bbox")) test_detector_bbox(datacfg, cfg, weights, filename, thresh);
     else if(0==strcmp(argv[2], "demo")) {
         list *options = read_data_cfg(datacfg);
         int classes = option_find_int(options, "classes", 20);
