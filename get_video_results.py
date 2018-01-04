@@ -11,7 +11,7 @@ import subprocess
 def test_frames(out_dir,data_dir):
     in_data_file = 'horse_face/side_horse_face_video_template.data'
     config_file = 'horse_face/yolo_two_class.cfg'
-    model_file = '../experiments/yolo_side_horse/yolo_two_class_1000.weights'
+    model_file = '../experiments/yolo_side_horse_wframes/yolo_two_class_2000.weights'
 
     
     test_images = glob.glob(os.path.join(data_dir,'*.jpg'))
@@ -133,14 +133,14 @@ def plot_detections(data_dir,out_dir):
     visualize.writeHTMLForFolder(out_dir)
 
 
-def main(video_file,to_run,fps,smooth):
+def main(video_file,to_run,fps,smooth,post_dir):
     print video_file
     print 'to_run',to_run
     print 'sec',fps
     
     # video_file = '../data/Surveillance/ch02_20161212115300.mp4'
-    out_dir = video_file[:video_file.rindex('.')]+'_result_files'
-    data_dir = video_file[:video_file.rindex('.')]+'_frames'
+    out_dir = video_file[:video_file.rindex('.')]+'_result_files'+post_dir
+    data_dir = video_file[:video_file.rindex('.')]+'_frames'+post_dir
     util.mkdir(data_dir)
     util.mkdir(out_dir)
 
@@ -172,9 +172,11 @@ if __name__=='__main__':
     parser.add_argument('-video', dest = 'video_file',type=str, default='', required = True,help='input video')
     parser.add_argument('-sec', dest= 'sec',type=int, default=5, help='seconds per frame. default 1 frame every 5 seconds')
     parser.add_argument('-action', dest = 'to_run',type=str, default='all', help="what to do with video. 'all' extracts frames, tests them and then plots a graph of detections.")
-    parser.add_argument('-smooth', dest = 'smooth', default=False, action = 'store_true',help='plot detections over time with smoothing per minute.default is False')
+    parser.add_argument('-smooth', dest = 'smooth', default=True, action = 'store_true',help='plot detections over time with smoothing per minute.default is False')
+    parser.add_argument('-dirpost', dest = 'post_dir', type=str, default='', help="a string to post pend to all created folders")
+    
     args = parser.parse_args()
-    main(args.video_file,args.to_run,args.sec,args.smooth)
+    main(args.video_file,args.to_run,args.sec,args.smooth,args.post_dir)
 
 
 
