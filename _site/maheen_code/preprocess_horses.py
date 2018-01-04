@@ -1,19 +1,12 @@
-# import matplotlib
-import numpy as np;
-# matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 import os
 import sys
 sys.path.append('..')
-from helpers import util
-# , visualize
+from helpers import util, visualize
 import numpy as np
 import scipy.misc
-# import cv2
+import cv2
 import glob
-# from skimage.draw import rectangle
-import random
-import shutil
+
 
 def get_annos_numpy(line_curr):
 	annos = line_curr.split(' ')
@@ -57,24 +50,6 @@ def just_visualize():
 
 	visualize.writeHTML(out_file_html,im_html,captions_html,100,100)
 	print out_file_html.replace(dir_server,'http://vision3.cs.ucdavis.edu:1000/')
-
-
-def get_anno_str_format(im,bbox,object_cat):
-	# im = cv2.imread(im_file)
-	w = im.shape[1]
-	h = im.shape[0]
-	width = bbox[1]-bbox[0]
-	height = bbox[3]-bbox[2]
-	x = bbox[0]+(width/2.)
-	y = bbox[2]+(height/2.)
-	x = x/float(w)
-	y = y/float(h)
-	width = width/float(w)
-	height = height/float(h)
-
-	str_format = '%d %.6f %.6f %.6f %.6f' %(object_cat, x, y, width, height)
-	return str_format
-	
 
 def save_im_anno(train_file,out_dir):
 	
@@ -246,13 +221,14 @@ def write_front_side_files():
 
 		util.writeFile(out_file,im_list_to_write)
 
-def scratch():
+		
+
+def main():
 	# make_kp_front_side_lists()
 	# visualize_front_side_lists()
 	# write_front_side_files()
 
 	# return
-	
 	dir_server = '/disk3'
 	horse_dir = os.path.join(dir_server,'maheen_data','eccv_18','experiments','yolo_all_horse_face_correct_output/results')
 
@@ -288,41 +264,9 @@ def scratch():
 		
 
 	visualize.writeHTML(out_file_html,im_html,captions_html,224,224)
-	print out_file_html.replace(dir_server,'http://vision3.cs.ucdavis.edu:1000/')		
+	print out_file_html.replace(dir_server,'http://vision3.cs.ucdavis.edu:1000/')
 
-def get_manual_anno_classes():
-	frame_dir = '../../data/frames/ch06_20161212115301_frames'
-	# ch02_20161212115300_frames'
-	label_dir = os.path.join(frame_dir,'labels')
-	out_dir = os.path.join(frame_dir,'labels_with_class')
-	util.mkdir(out_dir)
-
-	im_files = glob.glob(os.path.join(frame_dir,'*.jpg'))
-	im_files.sort()
-	print len(im_files)
-	plt.ion()
-	for im_num,im_file in enumerate(im_files):
-		print im_file,im_num,len(im_files)
-		label_file = im_file.replace(frame_dir,label_dir).replace('.jpg','.txt')
-		out_file = im_file.replace(frame_dir,out_dir).replace('.jpg','.txt')
-
-		assert os.path.exists(label_file)
-		label_info = util.readLinesFromFile(label_file)
-		num_boxes = int(label_info[0])
-		if num_boxes>0:
-			assert num_boxes==1
-			box = [int(val) for val in label_info[1].split(' ')]
-			im = scipy.misc.imread(im_file)
-			# im = cv2.rectangle(im,(box[0],box[1]),(box[2],box[3]),(255,0,0),5)
-			plt.figure()
-			plt.imshow(im)
-			val = raw_input('whats the class')
-			label_info.append(val)
-			util.writeFile(out_file,label_info)
-			plt.close()
-
-
-def scratch_1():
+	return
 	dir_server = '/disk3'
 	horse_dir = os.path.join(dir_server,'maheen_data','eccv_18','data/horse_data_cleaned')
 
@@ -344,181 +288,6 @@ def scratch_1():
 		print ims[0]
 		print out_file
 		util.writeFile(out_file,ims)
-
-def write_manual_anno_files():
-	im_dir = '../../data/frames/ch02_20161212115300_frames'
-	# ch06_20161212115301_frames'
-	# 
-	label_dir = os.path.join(im_dir,'labels')
-	class_dir = os.path.join(im_dir,'labels_with_class')
-	label_files = glob.glob(os.path.join(class_dir,'*.txt'))
-	label_files.sort()
-
-	lines = []
-	out_file_info = im_dir+'_class_ims.txt'
-
-
-	# plt.ion()
-	for label_file in label_files:
-		anno = util.readLinesFromFile(label_file)
-		im_name = os.path.split(label_file)[1].replace('.txt','')
-		im_file = os.path.join(im_dir,im_name+'.jpg')
-		out_file_anno = os.path.join(im_dir,im_name+'.txt')
-
-		print anno
-		object_cat = int(anno[2])
-		
-		if object_cat>1:
-			continue
-
-		bbox = np.array([int(val) for val in anno[1].split(' ')]) #xmin ymin xmax ymax
-		# coords = [[bbox[0],bbox[0],bbox[2],bbox[2],bbox[0]],[bbox[1],bbox[3],bbox[3],bbox[1],bbox[1]]]
-		
-		im = scipy.misc.imread(im_file)
-		bbox = bbox[[0,2,1,3]] # xmin xmax ymin ymax
-
-		str_format = get_anno_str_format(im,bbox,object_cat)
-		util.writeFile(out_file_anno,[str_format])
-
-		lines.append(im_file +' '+str(object_cat))
-		# coords = [[bbox[0],bbox[0],bbox[1],bbox[1],bbox[0]],[bbox[2],bbox[3],bbox[3],bbox[2],bbox[2]]]
-
-		# coords = np.array(coords).T
-		
-		# plt.figure()
-		# plt.imshow(im)
-		# plt.plot(coords[:,0],coords[:,1],'-b')
-
-		# # # coords = rectangle((bbox[1],bbox[0]),end = (bbox[1],bbox[0]),shape = im.shape)
-		# # print coords
-		# raw_input()
-	util.writeFile(out_file_info, lines)
-
-def write_manual_neg_anno_files():
-	im_dir = '../../data/frames/ch06_20161212115301_frames'
-	# ch02_20161212115300_frames'
-	# 
-	class_info_file = im_dir+'_class_ims.txt'
-	im_files = util.readLinesFromFile(class_info_file)
-	im_files = [file_curr.split(' ')[0] for file_curr in im_files]
-	im_files_all = glob.glob(os.path.join(im_dir,'*.jpg'))
-	print im_files_all[0]
-	left_overs = [file_curr for file_curr in im_files_all if file_curr not in im_files]
-	print len(left_overs),len(im_files), len(im_files_all)
-	for file_curr in left_overs:
-		out_file = file_curr.replace('.jpg','.txt')
-		# print out_file
-		# assert not os.path.exists(out_file)
-		util.writeFile(out_file,[''])
-
-	
-def make_test_files_manual_anno():
-	data_dir = '../../data/frames'
-	
-	files = [os.path.join(data_dir,file_name) for file_name in ['ch06_20161212115301_frames_class_ims.txt','ch02_20161212115300_frames_class_ims.txt']]
-	
-	all_files = util.readLinesFromFile(files[0])+util.readLinesFromFile(files[1])
-	print len(all_files)
-	random.shuffle(all_files)
-	train_files = all_files[:-20]
-	test_files = all_files[-20:]
-	print len(train_files),len(test_files),len(train_files)+len(test_files)
-	# return
-	out_dir = os.path.join(data_dir,'test_frames')
-	util.mkdir(out_dir)
-	files = []
-	out_file_list = os.path.join(data_dir,'test_frames.txt')
-	for file_curr in test_files:
-		file_curr = file_curr.split(' ')[0]
-		out_file = os.path.join(out_dir,os.path.split(file_curr)[1])
-		shutil.move(file_curr,out_file)
-		file_curr = file_curr.replace('.jpg','.txt')
-		out_file = out_file.replace('.jpg','.txt')
-		shutil.move(file_curr,out_file)
-		files.append(out_file)
-	util.writeFile(out_file_list,files)
-	
-	# test_frames = util.readLinesFromFile(out_file_list)
-	# for test_frame in test_frames:
-	# 	file_name = os.path.split(test_frame)[1]
-	# 	in_file_dir = os.path.join(data_dir,file_name[:file_name.rindex('_')]+'_frames')
-	# 	print in_file_dir
-	# 	in_file = os.path.join(in_file_dir,file_name.replace('.jpg','.txt'))
-	# 	out_file = os.path.join(out_dir,os.path.split(in_file)[1])
-	# 	print in_file,out_file
-	# 	print os.path.exists(in_file)
-	# 	print os.path.exists(out_file)
-	# 	shutil.move(in_file,out_file)
-
-
-
-def main():
-	out_dir = '../../data/horse_data_cleaned_yolo'
-
-	to_comb = [os.path.join(out_dir,'train_side.txt'),os.path.join(out_dir,'train_add_manual.txt')]
-	out_file = os.path.join(out_dir,'train_side_wframes.txt')
-
-	# to_comb = [os.path.join(out_dir,'test_side.txt'),os.path.join(out_dir,'test_add_manual.txt')]
-	# out_file = os.path.join(out_dir,'test_side_wframes.txt')
-
-	lines_all = []
-	for idx_file_curr,file_curr in enumerate(to_comb):
-		lines = util.readLinesFromFile(file_curr)
-		if idx_file_curr == 1:
-			lines = [line.replace('.txt','.jpg') for line in lines]
-		print len(lines)
-		lines_all = lines_all+lines
-	print len(lines_all)
-	print len(list(set(lines_all)))
-
-	util.writeFile(out_file,lines_all)
-
-
-	return
-	out_dir = '../../data/frames'
-	out_dir_write_train = '../data/horse_data_cleaned_yolo/train_side'
-	out_dir_write_test = '../data/horse_data_cleaned_yolo/test_side'
-	
-	out_file_train_add = os.path.join(out_dir,'train_add_manual.txt')
-	out_file_test_add = os.path.join(out_dir,'test_add_manual.txt')
-
-	frame_dirs = ['ch02_20161212115300_frames','ch06_20161212115301_frames']
-	
-	train_files = []
-	for frame_dir in frame_dirs:
-		print os.path.join(out_dir,frame_dir,'*.jpg')
-		train_files.extend(glob.glob(os.path.join(out_dir,frame_dir,'*.jpg')))
-	print len(train_files)
-	print train_files[0]
-
-	train_files_write = []
-	for train_file in train_files:
-		train_file = os.path.split(train_file)[1]
-		train_file = os.path.join(out_dir_write_train,train_file)
-		print train_file
-		train_files_write.append(train_file)
-	util.writeFile(out_file_train_add,train_files_write)
-
-	test_files = util.readLinesFromFile(os.path.join(out_dir,'test_frames.txt'))
-	print len(test_files)
-	print test_files[0]
-	test_files_write = []
-	for test_file in test_files:
-		test_file = os.path.split(test_file)[1]
-		test_file = os.path.join(out_dir_write_test,test_file)
-		test_files_write.append(test_file)
-		print test_file
-	util.writeFile(out_file_test_add,test_files_write)
-
-
-
-		
-
-	# write_manual_neg_anno_files()
-
-	# make empty files for the rest
-
-
 
 
 

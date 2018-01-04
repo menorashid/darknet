@@ -1,8 +1,8 @@
 classes= 2
-train= ../data/horse_data_cleaned_yolo/train_side.txt
-test= ../data/horse_data_cleaned_yolo/test_side.txt
-valid= ../data/horse_data_cleaned_yolo/test_side.txt
+train= ../data/horse_data_cleaned_yolo/train_side_wframes.txt
+test= ../data/horse_data_cleaned_yolo/test_side_wframes.txt
+valid= ../data/horse_data_cleaned_yolo/test_side_wframes.txt
 names= horse_face/side-horse-face.names
-backup= ../experiments/yolo_side_horse
-result_dir= ../experiments/yolo_side_horse/results
+backup= ../experiments/yolo_side_horse_wframes
+result_dir= ../experiments/yolo_side_horse_wframes/results
 data_dir= ../data/horse_data_cleaned_yolo/test_side

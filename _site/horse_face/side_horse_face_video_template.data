@@ -1,0 +1,8 @@
+classes= 2
+train= ../data/horse_data_cleaned_yolo/train_side.txt
+test= ../data/horse_data_cleaned_yolo/test_side.txt
+valid= ../data/horse_data_cleaned_yolo/test_side.txt
+names= horse_face/side-horse-face.names
+backup= ../experiments/yolo_side_horse
+result_dir= $RESULT$
+data_dir= $DATA$
