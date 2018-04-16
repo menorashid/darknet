@@ -223,7 +223,7 @@ def writeHTMLForFolder(path_to_im,ext='jpg',height=300,width=300):
     im_paths=[[im_file_curr] for im_file_curr in im_files];
     captions=im_paths;
     folder_name = os.path.split(path_to_im)[1]
-    out_file_html=os.path.join(path_to_im,folder_name+'.html');
+    out_file_html=os.path.join(path_to_im,folder_name +'.html');
     writeHTML(out_file_html,im_paths,captions,height=height,width=width);
 
 

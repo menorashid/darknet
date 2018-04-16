@@ -7,11 +7,13 @@ import cv2
 import glob
 import argparse
 import subprocess
+import time
 
 def test_frames(out_dir,data_dir):
     in_data_file = 'horse_face/side_horse_face_video_template.data'
     config_file = 'horse_face/yolo_two_class.cfg'
-    model_file = '../experiments/yolo_side_horse_wframes/yolo_two_class_2000.weights'
+    model_file = 'model/yolo_two_class_2000.weights'
+    # '../experiments/yolo_side_horse_wframes/yolo_two_class_2000.weights'
 
     
     test_images = glob.glob(os.path.join(data_dir,'*.jpg'))
@@ -26,6 +28,7 @@ def test_frames(out_dir,data_dir):
     with open(in_data_file,'rb') as f:
         lines=f.read();
     
+    # print lines
     lines = lines.replace('$RESULT$',out_dir)
     lines = lines.replace('$DATA$',data_dir)
     
@@ -42,7 +45,7 @@ def test_frames(out_dir,data_dir):
     # command.append(result_log_file)
     command.extend(['-thresh','0.2'])
     command = ' '.join(command)
-    print command
+    # print command
     subprocess.call(command, shell=True)
 
     
@@ -68,6 +71,7 @@ def extract_frames(video_file,data_dir,fps,size_output):
     
 
 def plot_detections_over_time(data_dir,out_dir,fps,smooth=False):
+
     frame_files = glob.glob(os.path.join(data_dir,'*.jpg'))
     frame_files.sort()
     result_files = [file.replace(data_dir,out_dir).replace('.jpg','.txt') for file in frame_files]
@@ -115,6 +119,7 @@ def plot_detections_over_time(data_dir,out_dir,fps,smooth=False):
 
 def plot_detections(data_dir,out_dir):
     frame_files = glob.glob(os.path.join(data_dir,'*.jpg'))
+    print len(frame_files)
     frame_files.sort()
     result_files = [file.replace(data_dir,out_dir).replace('.jpg','.txt') for file in frame_files]
 
@@ -154,6 +159,7 @@ def main(video_file,to_run,fps,smooth,post_dir):
         visualize.writeHTMLForFolder(data_dir)
         print 'DONE EXTRACTING FRAMES'
 
+    # t = time.time()
     if to_run=='all' or to_run=='test':
         print 'TESTING FRAMES'
         test_frames(out_dir,data_dir)
@@ -162,8 +168,11 @@ def main(video_file,to_run,fps,smooth,post_dir):
     if to_run=='all' or to_run=='graph':
         print 'PLOTTING DETECTIONS OVER TIME'
         plot_detections_over_time(data_dir,out_dir,fps,smooth)
+    
+    # print time.time()-t
 
     if to_run=='plot':
+        print data_dir
         plot_detections(data_dir,out_dir)
 
 
@@ -172,7 +181,7 @@ if __name__=='__main__':
     parser.add_argument('-video', dest = 'video_file',type=str, default='', required = True,help='input video')
     parser.add_argument('-sec', dest= 'sec',type=int, default=5, help='seconds per frame. default 1 frame every 5 seconds')
     parser.add_argument('-action', dest = 'to_run',type=str, default='all', help="what to do with video. 'all' extracts frames, tests them and then plots a graph of detections.")
-    parser.add_argument('-smooth', dest = 'smooth', default=True, action = 'store_true',help='plot detections over time with smoothing per minute.default is False')
+    parser.add_argument('-smooth', dest = 'smooth', default=True, action = 'store_true',help='plot detections over time with smoothing per minute.default is True')
     parser.add_argument('-dirpost', dest = 'post_dir', type=str, default='', help="a string to post pend to all created folders")
     
     args = parser.parse_args()
