@@ -1,5 +1,5 @@
 # Getting Started
-1. Install [FFMPEG](https://github.com/adaptlearning/adapt_authoring/wiki/Installing-FFmpeg)
+1. Install [FFmpeg](https://github.com/adaptlearning/adapt_authoring/wiki/Installing-FFmpeg)
 2. Clone this repo and `cd darknet`
 3. Run 
 ```
