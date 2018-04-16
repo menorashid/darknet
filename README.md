@@ -9,10 +9,12 @@ pip install -r requirements.txt
 ```
 make
 ```
-5. To test a video
+5. Download [pretrained model](https://www.dropbox.com/s/gl49mdegyqjjsyv/yolo_two_class_2000.weights) and put it in `model/`
+6. To test a video run
 ```
 python get_video_results.py -video <path_to_video>.mp4
 ```
+A detection graph would be saved as `<path_to_video>_result_files/detections_over_time.jpg`
 
 For furter options run
 ```
