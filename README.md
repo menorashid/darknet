@@ -1,3 +1,28 @@
+# Getting Started
+1. Install [FFMPEG](https://github.com/adaptlearning/adapt_authoring/wiki/Installing-FFmpeg)
+2. Clone this repo and `cd darknet`
+3. Run 
+```
+pip install -r requirements.txt
+```
+4. Install Yolo-v2
+```
+make
+```
+5. To test a video
+```
+python get_video_results.py -video <path_to_video>.mp4
+```
+
+For furter options run
+```
+python get_video_results.py -h
+```
+
+To train your own model see below.
+
+
+
 # Yolo-v2 Windows and Linux version
 
 [![CircleCI](https://circleci.com/gh/AlexeyAB/darknet.svg?style=svg)](https://circleci.com/gh/AlexeyAB/darknet)
