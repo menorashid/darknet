@@ -1,3 +1,20 @@
+# Paper
+This repository provides code for:
+
+**What should I annotate? An automatic tool for finding video segments for EquiFACS annotation.** Maheen Rashid, Sofia Broomé, Pia Haubro Andersen, Karina Gleerup, Yong Jae Lee. Measuring Behavior 2018.
+
+If you find this repo useful please cite our work:
+```bib
+@inproceedings{rashid2018what,
+  title={What should I annotate? An automatic tool for finding video segments for EquiFACS annotation.},
+  author={Rashid, Maheen and Broomé, Sofia and Andersen, Pia Haubro and Gleerup,Karina and Lee, Yong Jae},
+  booktitle={Measuring Behavior},
+  year={2018}
+}
+```
+For questions contact Maheen Rashid (mhnrashid at ucdavis dot edu)
+
+
 # Getting Started
 1. Install [FFmpeg](https://github.com/adaptlearning/adapt_authoring/wiki/Installing-FFmpeg)
 2. Clone this repo and `cd darknet`
