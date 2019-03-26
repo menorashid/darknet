@@ -102,13 +102,12 @@ def plot_detections_over_time(data_dir,out_dir,fps,smooth=False):
                 det_confs[class_curr].append(max_conf)
 
     if smooth:
-        smooth_window = int(round(60/float(fps)))
-        # print smooth_window
-
+        
         for idx, det in enumerate(det_confs):
+            smooth_window = min(int(round(60/float(fps))),len(det))
             box = np.ones((smooth_window,))/float(smooth_window)
             det_confs[idx] = np.convolve(np.array(det), box, mode='same') 
-
+        
     labels = ['side','front']
     xlabel = 'Video Time (min)'
     ylabel = 'Detection Confidence'

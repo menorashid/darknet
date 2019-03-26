@@ -9,9 +9,12 @@ import os;
 from PIL import Image,ImageDraw,ImageFont;
 import scipy.misc
 import util;
+import codecs
 
 def writeHTML(file_name,im_paths,captions,height=200,width=200):
-    f=open(file_name,'w');
+    # f=open(file_name,'w');
+    f = codecs.open(file_name, "w",encoding='utf-8')
+    # file.writelines( "%s\n" % item for item in my_list )
     html=[];
     f.write('<!DOCTYPE html>\n');
     f.write('<html><body>\n');
