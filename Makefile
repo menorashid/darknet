@@ -50,12 +50,12 @@ LDFLAGS+= -lgomp
 endif
 
 ifeq ($(GPU), 1) 
-COMMON+= -DGPU -I/usr/local/cuda/include/
+COMMON+= -DGPU -I/usr/local/cuda-9.0/include/
 CFLAGS+= -DGPU
-LDFLAGS+= -L/usr/local/cuda/lib64 -lcuda -lcudart -lcublas -lcurand
+LDFLAGS+= -L/usr/local/cuda-9.0/lib64 -lcuda -lcudart -lcublas -lcurand
 endif
 
-ifeq ($(CUDNN), 1) 
+ifeq ($(CUDNN), 0) 
 COMMON+= -DCUDNN 
 CFLAGS+= -DCUDNN -I/usr/local/cudnn/include
 LDFLAGS+= -L/usr/local/cudnn/lib64 -lcudnn

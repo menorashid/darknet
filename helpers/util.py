@@ -128,8 +128,9 @@ def writeFile(file_name,list_to_write):
             f.write(string+'\n');
 
 def getAllSubDirectories(meta_dir):
-    meta_dir=escapeString(meta_dir);
+    # meta_dir=escapeString(meta_dir);
     command='find '+meta_dir+' -type d';
+    print command
     sub_dirs=subprocess.check_output(command,shell=True)
     sub_dirs=sub_dirs.split('\n');
     sub_dirs=[dir_curr for dir_curr in sub_dirs if dir_curr];
