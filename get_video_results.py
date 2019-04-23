@@ -3,7 +3,7 @@ import sys
 from helpers import util, visualize
 import numpy as np
 import scipy.misc
-import cv2
+# import cv2
 import glob
 import argparse
 import subprocess

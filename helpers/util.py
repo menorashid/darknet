@@ -122,7 +122,12 @@ def replaceSpecialChar(string,replace_with):
         string=string.replace(special_char,replace_with);
     return string
 
-def writeFile(file_name,list_to_write):
+def writeFile(file_name,list_to_write, uni_it = False):
+    if uni_it:
+        file_name = unicode(file_name, "utf-8")
+    #     print type(file_name)
+    # print file_name
+
     with open(file_name,'wb') as f:
         for string in list_to_write:
             f.write(string+'\n');
@@ -136,4 +141,9 @@ def getAllSubDirectories(meta_dir):
     sub_dirs=[dir_curr for dir_curr in sub_dirs if dir_curr];
     return sub_dirs
     
-        
+def convert_sec_to_str(time_curr,num_decimal = 3):
+    m, s = divmod(time_curr, 60.)
+    h, m = divmod(m, 60.)
+    str_secs = '%d:%02d:%.'+str(num_decimal)+'f'
+    str_secs = str_secs % (h, m, s)
+    return str_secs

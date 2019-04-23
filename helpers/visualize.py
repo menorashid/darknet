@@ -184,6 +184,8 @@ def plotErrorBars(dict_to_plot,x_lim,y_lim,xlabel,y_label,title,out_file,margin=
     plt.close();
 
 def plotSimple(xAndYs,out_file=None,title='',xlabel='',ylabel='',legend_entries=None,loc=0,outside=False,logscale=False,colors=None,xticks=None):
+    if out_file is None:
+        plt.ion()
     plt.title(title);
     plt.grid(1);
     plt.xlabel(xlabel);
@@ -218,7 +220,9 @@ def plotSimple(xAndYs,out_file=None,title='',xlabel='',ylabel='',legend_entries=
         else:
             plt.savefig(out_file);
 
-        plt.close();    
+        plt.close();
+    else:
+        plt.show()    
 
 def writeHTMLForFolder(path_to_im,ext='jpg',height=300,width=300):
     im_files=[file_curr for file_curr in os.listdir(path_to_im) if file_curr.endswith(ext)];
