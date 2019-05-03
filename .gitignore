@@ -15,6 +15,7 @@ submission/
 cfg/
 darknet
 model/
+scratch/
 .fuse*
 
 # OS Generated #

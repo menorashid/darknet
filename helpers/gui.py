@@ -1,7 +1,11 @@
 import matplotlib
 import numpy as np;
-matplotlib.use('TkAgg')
-import matplotlib.pyplot as plt
+# matplotlib.use('TkAgg')
+matplotlib.use('TkAgg',warn=False, force=True)
+from matplotlib import pyplot as plt
+print "Using:",matplotlib.get_backend()
+
+# import matplotlib.pyplot as plt
 from matplotlib.widgets import Cursor
 import os;
 import sys
@@ -14,11 +18,25 @@ import time
 
 
 class Gui:
-    def __init__(self, vals, smoothvals, vid_name, boxes, fps, size_output):
+    def __init__(self, res_file, vid_name, fps, size_output, frame_dir):
+    # (self, vals, smoothvals, vid_name, boxes, fps, size_output):
+
         # self.vals_handles = []
+        loaded = np.load(res_file)
+        det_confs = loaded['det_confs']
+        times = loaded['times']
+        boxes = loaded['boxes']
+
+        xAndYs, colors_etc, _, _, legend_entries = util.get_all_plotting_vals(det_confs, times, boxes,fps)
+        self.xAndYs = xAndYs
+        self.colors_etc = colors_etc
+        self.labels = legend_entries
+        self.frame_dir = frame_dir
+
         self.handles = []
         plt.ion()
-        self.fig = plt.figure(num = 'Face Finder')
+        print 'ion'
+        self.fig = plt.figure(num = 'Detection Plot')
         self.im_fig = None
         # self.im = np.random.random((240,240,3))
         self.size_output = size_output
@@ -29,18 +47,20 @@ class Gui:
         
         self.fps = fps
         
-        self.labels_smooth = ['Side','Front']
-        self.labels = ['Side','Front','Side Raw','Front Raw']
+        # self.labels_smooth = ['Side','Front']
+        # self.labels = ['Side','Front','Side Raw','Front Raw']
         
-        self.xAndYs = smoothvals+vals
-        self.xAndYs_smooth = smoothvals
-        colors = ['C0','C1','C0','C1']
-        alphas = [1.,1.,0.3,0.3]
-        markers = ['o']*4
-        markersize = [2]*4
-        self.colors_etc = [colors, alphas, markers, markersize]
-        self.colors_etc_smooth = [val[:2] for val in self.colors_etc]
+        # self.xAndYs = smoothvals+vals
+        # # self.xAndYs_smooth = smoothvals
+        # # colors = ['C0','C1','C0','C1']
+        # # alphas = [1.,1.,0.3,0.3]
+        # # markers = ['o']*4
+        # # markersize = [2]*4
+        # self.colors_etc = [colors, alphas, markers, markersize]
+        # # self.colors_etc_smooth = [val[:2] for val in self.colors_etc]
+
         self.plot(self.xAndYs, self.labels, self.colors_etc)
+        
         self.in_click = False
         self.fig.canvas.mpl_connect('button_press_event', self.on_click)
         self.fig.canvas.mpl_connect('close_event', self.on_exit)
@@ -93,10 +113,10 @@ class Gui:
         # print y_lim
         plt.plot([time_curr/60.,time_curr/60.],[0,y_max],'-r') 
 
-
-        m, s = divmod(time_curr, 60.)
-        h, m = divmod(m, 60.)
-        str_secs = '%d:%02d:%.3f' % (h, m, s)
+        str_secs = util.convert_sec_to_str(time_curr,num_decimal = 3)
+        # m, s = divmod(time_curr, 60.)
+        # h, m = divmod(m, 60.)
+        # str_secs = '%d:%02d:%.3f' % (h, m, s)
 
         return idx_min, time_curr, str_secs
 
@@ -112,27 +132,14 @@ class Gui:
         video_name = os.path.split(self.vid_name)[1]
         video_name = video_name[:video_name.rindex('.')]
 
-        out_file_format = os.path.join(self.out_dir_scratch,'temp.jpg')
-        sec_format = str(datetime.timedelta(seconds=time_curr))
-        m, s = divmod(time_curr, 60.)
-        h, m = divmod(m, 60.)
-        str_secs = '%d:%02d:%05f' % (h, m, s)
 
-        # print 'LOOK HERE',h,m,s,time_curr, idx_time_curr,sec_format
-        
-
-        command = []
-        command.extend(['ffmpeg'])
-        command.extend(['-ss',str_secs])
-        command.extend(['-y'])
-        command.extend(['-i',self.vid_name])
-        command.extend(['-vframes',str(1)])
-        command.extend(['-s',str(self.size_output[0])+'x'+str(self.size_output[1])])
-        command.append(out_file_format)
-        command.append('-hide_banner')
-        command = ' '.join(command)
-        # print command
-        subprocess.call(command, shell=True)
+        out_file_curr = video_name+'_'+format(idx_time_curr+1, '09d')+'.jpg'
+        out_file_format = os.path.join(self.frame_dir, out_file_curr)
+        if os.path.exists(out_file_format):
+            return out_file_format
+        else:
+            command = util.get_extract_image_command(self.vid_name, self.frame_dir, time_curr, idx_time_curr+1, self.size_output)
+            subprocess.call(command, shell=True)
 
         return out_file_format
 
@@ -162,7 +169,7 @@ class Gui:
             # print self.boxes[:,idx_time,:]
             # print box
 
-            det_conf = self.xAndYs[type_idx][1][idx_time]
+            det_conf = self.xAndYs[type_idx+2][1][idx_time]
             # print 'AAAAAAAAAAAAA',type_idx, det_conf 
             str_curr = strs_title[type_idx]+' %.2f' % det_conf
             str_title.append(str_curr)
@@ -191,6 +198,7 @@ class Gui:
 
 
     def on_click(self, event):
+        # print 'IN click'
         if self.in_click:
             return
 
@@ -201,6 +209,7 @@ class Gui:
         coord = plt.ginput(1)
         idx_time, time_curr, str_time_curr = self.process_coord(coord)
         out_file_im = self.extract_image( time_curr, idx_time)
+        print out_file_im
         self.plot_im(out_file_im, idx_time, str_time_curr)
         plt.figure(self.fig.number)
         plt.suptitle('Updated image for '+str_time_curr+' in image window. '+suptitle_select)

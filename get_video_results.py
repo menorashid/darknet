@@ -7,9 +7,11 @@ import scipy.misc
 import glob
 import argparse
 import subprocess
+import datetime
 import time
+import matplotlib.pyplot as plt
 
-def test_frames(out_dir,data_dir):
+def test_frames(out_dir,data_dir, no_out = False):
     in_data_file = 'horse_face/side_horse_face_video_template.data'
     config_file = 'horse_face/yolo_two_class.cfg'
     model_file = 'model/yolo_two_class_2000.weights'
@@ -40,15 +42,85 @@ def test_frames(out_dir,data_dir):
     command.append(out_data_file)
     command.append(config_file)
     command.append(model_file)
-    command.extend(['<',test_file])
+    command.extend(['<','"'+test_file+'"'])
         # ,'>'])
     # command.append(result_log_file)
     command.extend(['-thresh','0.2'])
+    if no_out:
+        command.append('> /dev/null 2>&1')
+
     command = ' '.join(command)
+    print command
+    for num_im, im in enumerate(test_images):
+        out_file = os.path.join(out_dir,os.path.split(im)[1].replace('.jpg','.txt'))
+        util.writeFile(out_file,command)
+        if num_im%10==0:
+            time.sleep(3)
+    subprocess.call(command, shell=True)
+
+def test_frames_gui((out_dir,data_dir, no_out)):
+    in_data_file = 'horse_face/side_horse_face_video_template.data'
+    config_file = 'horse_face/yolo_two_class.cfg'
+    model_file = 'model/yolo_two_class_2000.weights'
+    # '../experiments/yolo_side_horse_wframes/yolo_two_class_2000.weights'
+
+    
+    test_images = glob.glob(os.path.join(data_dir,'*.jpg'))
+    test_images.sort()
+    test_file = os.path.join(out_dir,'test_images.txt')
+    util.writeFile(test_file,test_images)
+    
+    # result_log_file = os.path.join(out_dir,'result_log.txt')
+    out_data_file = os.path.join(out_dir,'side_horse_face.data')
+
+
+    with open(in_data_file,'rb') as f:
+        lines=f.read();
+    
+    # print lines
+    lines = lines.replace('$RESULT$',out_dir)
+    lines = lines.replace('$DATA$',data_dir)
+    
+    with open(out_data_file,'wb') as f:
+        f.write(lines);
+
+    command = []
+    command.extend(['./darknet','detector','test_bbox'])
+    command.append('"'+out_data_file+'"')
+    command.append(config_file)
+    command.append(model_file)
+    command.extend(['<','"'+test_file+'"'])
+        # ,'>'])
+    # command.append(result_log_file)
+    command.extend(['-thresh','0.2'])
+    if no_out:
+        command.append('> /dev/null 2>&1')
+
+    command = ' '.join(command)
+    print command
+    # for num_im, im in enumerate(test_images):
+    #     out_file = os.path.join(out_dir,os.path.split(im)[1].replace('.jpg','.txt'))
+    #     util.writeFile(out_file,command)
+    #     if num_im%10==0:
+    #         time.sleep(1)
+    subprocess.call(command, shell=True)
+
+
+def run_commandlines(command):
+    # print command
+    command = command+'> /dev/null 2>&1'
     # print command
     subprocess.call(command, shell=True)
 
-    
+
+def get_duration(video_file):
+
+    command = ['ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1']
+    command.append('"'+video_file+'"')
+    command = ' '.join(command)
+    secs = subprocess.check_output(command, shell = True)
+    secs = float(secs)
+    return secs
 
 def extract_frames(video_file,data_dir,fps,size_output):
     # ffmpeg -i ../data/Surveillance/ch06_20161212115301.mp4 -vf fps=1/5 -s 416x416 ../data/Surveillance/ch06_20161212115301/ch06_20161212115301_%09d.jpg -hide_banner 
@@ -59,16 +131,96 @@ def extract_frames(video_file,data_dir,fps,size_output):
     out_file_format = os.path.join(data_dir,video_name+'_%09d.jpg')
 
     command = []
-    command.extend(['ffmpeg','-i',video_file])
+    command.extend(['ffmpeg','-i','"'+video_file+'"'])
     command.extend(['-vf','fps=1/'+str(fps)])
     command.extend(['-s',str(size_output[0])+'x'+str(size_output[1])])
-    command.append(out_file_format)
+    command.append('"'+out_file_format+'"')
     command.append('-hide_banner')
+    # command.append('&> temp')
     command = ' '.join(command)
     
     print command
     subprocess.call(command, shell=True)
     
+
+
+def collate_results_for_plotting(vid_name, res_dir, fps =5):
+    # vid_name = os.path.split(res_dir.replace('_result_files',''))[1]
+
+    out_file = os.path.join(res_dir, 'results_collated.npz')
+    if os.path.exists(out_file):
+        loaded = np.load(out_file)
+        det_confs = loaded['det_confs']
+        times = loaded['times']
+        boxes = loaded['boxes']
+    else:
+        text_files = glob.glob(os.path.join(res_dir,vid_name+'_*[0-9].txt'))
+        text_files.sort()
+
+        print len(text_files)
+        
+        det_confs =[[],[]]
+        boxes = [[],[]]
+        times =[]    
+        for text_file in text_files:
+            num = os.path.split(text_file)[1]
+            num = int(num[num.rindex('_')+1:num.rindex('.')])-1
+            sec = fps*num +fps/2.
+            
+            times.append(sec)
+
+            dets = util.readLinesFromFile(text_file)
+            if len(dets)==0:
+                [det_confs[idx].append(0) for idx in range(2)]
+                [boxes[idx].append(-1*np.ones((1,4))) for idx in range(2)]
+            else:
+                
+                class_conf = []
+                boxes_curr = []
+                for det in dets:
+                    det = det.split(' ')
+                    box_curr = np.array([int(val) for val in det[2:]])
+                    det = [int(det[0]),float(det[1])]
+                    boxes_curr.append(box_curr)
+                    class_conf.append(det)
+
+                
+                class_conf = np.array(class_conf)
+                for class_curr in range(2):
+                    rel_idx = np.where(class_conf[:,0]==class_curr)[0]
+                    rel_dets = class_conf[rel_idx,:]
+                    
+                    if rel_dets.size ==0:
+                        max_conf=0
+                        box_max = -1*np.ones((1,4))
+
+                    else:
+                        max_conf = np.max(rel_dets[:,1])
+                        max_idx = rel_idx[np.argmax(rel_dets[:,1])]
+                        box_max = boxes_curr[max_idx][np.newaxis,:]
+
+                    det_confs[class_curr].append(max_conf)
+                    boxes[class_curr].append(box_max)
+        
+        det_confs = np.array(det_confs)
+        boxes = np.array([np.concatenate(boxes[idx], axis =0) for idx in range(len(boxes))])
+        times = np.array(times)
+        np.savez(out_file, det_confs = det_confs, boxes = boxes, times = times)
+    
+    return det_confs, times, boxes
+
+def plot_detections_over_time_new(vid_name, res_dir, fps):
+    det_confs, times, boxes = collate_results_for_plotting(vid_name, res_dir, fps)
+    xAndYs, colors_etc, labels, title, legend_entries = util.get_all_plotting_vals(det_confs, times, boxes,fps)
+
+    # xAndYs = smoothvals+vals
+    xAndYs = [(val_curr[0]/60.,val_curr[1]) for val_curr in xAndYs]
+    out_file = os.path.join(res_dir, 'detections_over_time.jpg')
+
+    visualize.plotSimple(xAndYs, out_file, title = title , xlabel = labels[0], ylabel =labels[1],legend_entries = legend_entries, colors_etc = colors_etc)
+    
+    return out_file
+
 
 def plot_detections_over_time(data_dir,out_dir,fps,smooth=False):
 
@@ -153,7 +305,7 @@ def main(video_file,to_run,fps,smooth,post_dir):
 
     if to_run=='all' or to_run=='extract':
         print 'EXTRACTING FRAMES'
-        subprocess.call('rm '+os.path.join(data_dir,'*.jpg'),shell=True)
+        subprocess.call('rm '+'"'+os.path.join(data_dir,'*.jpg')+'"',shell=True)
         extract_frames(video_file,data_dir,fps,size_output)
         visualize.writeHTMLForFolder(data_dir)
         print 'DONE EXTRACTING FRAMES'

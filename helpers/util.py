@@ -86,6 +86,60 @@ def product(arr):
         p *= l
     return p;
 
+def get_all_plotting_vals(det_confs, times, boxes,fps):
+    det_confs_plot = [[],[]]
+    # if smooth:
+    for idx, det in enumerate(det_confs):
+        smooth_window = min(int(round(60/float(fps))),len(det))
+        box = np.ones((smooth_window,))/float(smooth_window)
+        det_confs_plot[idx] = np.convolve(np.array(det), box, mode='same') 
+    vals = [(times, val) for val in det_confs]
+    smoothvals = [(times, val) for val in det_confs_plot]
+
+    legend_entries = ['Side','Front','Side Raw','Front Raw']
+    
+    xAndYs = smoothvals+vals
+    # xAndYs_smooth = smoothvals
+    colors = ['C0','C1','C0','C1']
+    alphas = [1.,1.,0.3,0.3]
+    markers = ['o']*4
+    markersize = [2]*4
+    colors_etc = [colors, alphas, markers, markersize]
+    # colors_etc_smooth = [val[:2] for val in colors_etc]
+
+    xlabel = 'Video Time (min)'
+    ylabel = 'Detection Confidence'
+    title = 'Face Detections Over Time'
+    labels = [xlabel, ylabel]
+    return xAndYs, colors_etc, labels, title, legend_entries
+
+def get_extract_image_command(vid_file, out_dir, time_curr, idx_time_curr, size_output = [416,416]):
+    video_name = os.path.split(vid_file)[1]
+    video_name = video_name[:video_name.rindex('.')]
+
+    out_file_curr = video_name+'_'+format(idx_time_curr, '09d')+'.jpg'
+    out_file_format = os.path.join(out_dir, out_file_curr)
+    # print out_file_format
+
+    # sec_format = str(datetime.timedelta(seconds=time_curr))
+    # m, s = divmod(time_curr, 60.)
+    # h, m = divmod(m, 60.)
+    # str_secs = '%d:%02d:%05f' % (h, m, s)
+    str_secs = convert_sec_to_str(time_curr, 5)
+    command = []
+    command.extend(['ffmpeg'])
+    command.extend(['-ss',str_secs])
+    command.extend(['-y'])
+    command.extend(['-i','"'+vid_file+'"'])
+    command.extend(['-vframes',str(1)])
+    if size_output is not None:
+        command.extend(['-s',str(size_output[0])+'x'+str(size_output[1])])
+    command.append('"'+out_file_format+'"')
+    command.append('-hide_banner')
+    command = ' '.join(command)
+    return command
+    # subprocess.call(command, shell=True)
+
 def getIOU(box_1,box_2):
     box_1=np.array(box_1);
     box_2=np.array(box_2);

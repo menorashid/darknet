@@ -415,22 +415,25 @@ def save_det_csvs():
     vid_files = util.readLinesFromFile(file_list_txt)
     res_dirs = []
     replace_str = ['../pia','../copy']
+    # replace_str = ['../pia','../pia']
     for vid_file in vid_files:
         res_dir = vid_file.replace(replace_str[0],replace_str[1])
         res_dir = res_dir[:res_dir.rindex('.')]+'_result_files'
         assert os.path.exists(res_dir)
         res_dirs.append(res_dir)
     print len(res_dirs)
+    res_dirs = res_dirs[:170]
 
 
 
-    side = False
-
-    for num_consec_segs in range(1,7):
+    side = True
+    t = time.time()
+    for num_consec_segs in range(1,2):
+    # range(1,7):
         if side:
-            files_with_segs = os.path.join('../copy','files_with_valid_side_dets_'+str(num_consec_segs*5)+'.csv')
+            files_with_segs = os.path.join('../copy','files_with_valid_side_dets_'+str(num_consec_segs*5)+'_exp.csv')
         else:
-            files_with_segs = os.path.join('../copy','files_with_valid_front_dets_'+str(num_consec_segs*5)+'.csv')
+            files_with_segs = os.path.join('../copy','files_with_valid_front_dets_'+str(num_consec_segs*5)+'_exp.csv')
 
         to_write = [['Res dir','Num Segs']]
 
@@ -446,12 +449,12 @@ def save_det_csvs():
             writer = csv.writer(f)
             writer.writerows(to_write)
         print files_with_segs,len(to_write)
-        
+    print time.time()-t
 
 
 def main():
-
-    copy_just_csvs()
+    save_det_csvs()
+    # copy_just_csvs()
 
     # print 'hello'
     # file_list_txt = 'list_of_all_files.txt'

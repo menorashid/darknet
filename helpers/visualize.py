@@ -1,6 +1,7 @@
-import matplotlib
+import matplotlib as mpl
 import numpy as np;
-matplotlib.use('Agg')
+
+mpl.use('Agg',warn=False)
 # matplotlib.use('PS') 
 import matplotlib.pyplot as plt;
 # matplotlib.rcParams.update({'font.size': 16})
@@ -10,7 +11,7 @@ from PIL import Image,ImageDraw,ImageFont;
 import scipy.misc
 import util;
 import codecs
-
+import time
 def writeHTML(file_name,im_paths,captions,height=200,width=200):
     # f=open(file_name,'w');
     f = codecs.open(file_name, "w",encoding='utf-8')
@@ -183,9 +184,11 @@ def plotErrorBars(dict_to_plot,x_lim,y_lim,xlabel,y_label,title,out_file,margin=
     plt.savefig(out_file);
     plt.close();
 
-def plotSimple(xAndYs,out_file=None,title='',xlabel='',ylabel='',legend_entries=None,loc=0,outside=False,logscale=False,colors=None,xticks=None):
+def plotSimple(xAndYs,out_file=None,title='',xlabel='',ylabel='',legend_entries=None,loc=0,outside=False,logscale=False,colors=None,xticks=None, colors_etc = None):
     if out_file is None:
         plt.ion()
+    else:
+        f = plt.figure()
     plt.title(title);
     plt.grid(1);
     plt.xlabel(xlabel);
@@ -198,7 +201,8 @@ def plotSimple(xAndYs,out_file=None,title='',xlabel='',ylabel='',legend_entries=
         if colors is not None:
             color_curr=colors[idx_x_y];
             handle,=plt.plot(x,y,color_curr)
-                # ,linewidth=2.0);
+        elif colors_etc is not None:
+            handle,=plt.plot(x,y,color = colors_etc[0][idx_x_y], alpha = colors_etc[1][idx_x_y], marker = colors_etc[2][idx_x_y], markersize = colors_etc[3][idx_x_y])
         else:
             handle,=plt.plot(x,y)
                 # ,linewidth=2.0);
@@ -219,10 +223,64 @@ def plotSimple(xAndYs,out_file=None,title='',xlabel='',ylabel='',legend_entries=
             plt.savefig(out_file,bbox_extra_artists=(lgd,), bbox_inches='tight')
         else:
             plt.savefig(out_file);
-
+        # time.sleep(10)
         plt.close();
     else:
         plt.show()    
+
+
+# def plotSimple(xAndYs,out_file=None,title='',xlabel='',ylabel='',legend_entries=None,loc=0,outside=False,logscale=False,colors=None,xticks=None, colors_etc = None):
+#     # if out_file is None:
+#     #     plt.ion()
+#     # else:
+#     # plt.ion()
+#     f = plt.figure()
+#     plt.title(title);
+#     plt.grid(1);
+#     plt.xlabel(xlabel);
+#     plt.ylabel(ylabel);
+#     if logscale:
+#         plt.gca().set_xscale('log')
+#     # assert len(xs)==len(ys)
+#     handles=[];
+#     for idx_x_y,(x,y) in enumerate(xAndYs):
+#         if colors is not None:
+#             color_curr=colors[idx_x_y];
+#             handle,=plt.plot(x,y,color_curr)
+#         elif colors_etc is not None:
+#             handle,=plt.plot(x,y,color = colors_etc[0][idx_x_y], alpha = colors_etc[1][idx_x_y], marker = colors_etc[2][idx_x_y], markersize = colors_etc[3][idx_x_y])
+#         else:
+#             handle,=plt.plot(x,y)
+#                 # ,linewidth=2.0);
+
+#         handles.append(handle);
+#     if legend_entries is not None:
+#         if outside:
+#             lgd=plt.legend(handles,legend_entries,loc=loc,bbox_to_anchor=(1.05, 1),borderaxespad=0.)
+#         else:
+#             lgd=plt.legend(handles,legend_entries,loc=loc)    
+
+#     if xticks is not None:
+#         ax = plt.gca()
+#         ax.set_xticks(xticks)
+
+#     # if out_file is not None:
+#     if legend_entries is not None:
+#         plt.savefig(out_file,bbox_extra_artists=(lgd,), bbox_inches='tight')
+#     else:
+#         plt.savefig(out_file);
+#     # time.sleep(10)
+#     # plt.set_();
+#     # f.set_visible(not f.get_visible())
+
+#     # set_visible(not fig.get_visible())
+#     # plt.draw()
+#     plt.close(f)
+#     # else:
+#     #     plt.show()    
+
+
+
 
 def writeHTMLForFolder(path_to_im,ext='jpg',height=300,width=300):
     im_files=[file_curr for file_curr in os.listdir(path_to_im) if file_curr.endswith(ext)];
@@ -280,12 +338,12 @@ def plotGroupBar(out_file,dict_vals,xtick_labels,legend_vals,colors,xlabel='',yl
     else:
         ax.legend( legend_vals,loc=loc)
         # , mode="expand", borderaxespad=0.)
-# Setting the x-axis and y-axis limits
+    # Setting the x-axis and y-axis limits
     # plt.xlim(xlim[0],xlim[1])
     if ylim is not None:
         plt.ylim(ylim )
 
-# Adding the legend and showing the plot
+    # Adding the legend and showing the plot
     
     # plt.gcf().subplots_adjust(top=0.9,bottom=0.15)
     # if out_file.endswith('.pdf'):
