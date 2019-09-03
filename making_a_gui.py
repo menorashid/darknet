@@ -208,6 +208,7 @@ class Application(tk.Frame):
         pool = multiprocessing.Pool()
         pool.map_async(gvr.run_commandlines, commands, callback = self.extracting_done)
         self.check_frame_extraction(data_dir, num_frames,'.jpg',str_label)
+
         
 
         str_label = 'Running Detector'
@@ -215,13 +216,20 @@ class Application(tk.Frame):
         self.progress_label.configure(text = str_label)
         self.update_idletasks()
         
-        subprocess.call('rm '+'"'+os.path.join(res_dir,vid_name+'"_*[0-9].txt'),shell=True)
+        commands = []
+        commands.append('rm '+'"'+os.path.join(res_dir,vid_name+'"_*[0-9].txt'))
+        commands.append('rm '+'"'+os.path.join(res_dir,'results_collated."*'))
+        commands.append('rm '+'"'+os.path.join(res_dir,'detections_over_time.jpg"'))
+        
+        for command in commands:
+            subprocess.call(command,shell=True)
+        
         self.extracting = True
         args = [(res_dir, data_dir, True)]
         pool = multiprocessing.Pool(1)
         pool.map_async(gvr.test_frames_gui, args, callback = self.extracting_done)
         self.check_frame_extraction(res_dir, num_frames,'.txt',str_label)
-
+        
         # # det_confs, time, boxes = gvr.collate_results_for_plotting(res_dir, self.fps)
 
         self.progress_label.configure(text = 'Plotting')

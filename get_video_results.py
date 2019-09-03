@@ -3,13 +3,14 @@ import sys
 from helpers import util, visualize
 import numpy as np
 import scipy.misc
-# import cv2
+import csv
 import glob
 import argparse
 import subprocess
 import datetime
 import time
 import matplotlib.pyplot as plt
+import re
 
 def test_frames(out_dir,data_dir, no_out = False):
     in_data_file = 'horse_face/side_horse_face_video_template.data'
@@ -146,8 +147,10 @@ def extract_frames(video_file,data_dir,fps,size_output):
 
 def collate_results_for_plotting(vid_name, res_dir, fps =5):
     # vid_name = os.path.split(res_dir.replace('_result_files',''))[1]
+    print 'vid_name',vid_name
 
     out_file = os.path.join(res_dir, 'results_collated.npz')
+    out_file_csv = os.path.join(res_dir, 'results_collated.csv')
     if os.path.exists(out_file):
         loaded = np.load(out_file)
         det_confs = loaded['det_confs']
@@ -205,9 +208,48 @@ def collate_results_for_plotting(vid_name, res_dir, fps =5):
         det_confs = np.array(det_confs)
         boxes = np.array([np.concatenate(boxes[idx], axis =0) for idx in range(len(boxes))])
         times = np.array(times)
+        # print out_file
+        write_detections_csv(out_file_csv, vid_name, det_confs, boxes, times)
+
         np.savez(out_file, det_confs = det_confs, boxes = boxes, times = times)
     
     return det_confs, times, boxes
+
+def write_detections_csv(out_file_csv, vid_name, det_confs, boxes, times):
+    str_dig = '[0-9]'
+    str_reg = 'ch'+str_dig*2+'_'+str_dig*14
+    vid_start_time = None
+
+    if re.match(str_reg, vid_name):
+        cam_time = vid_name.split('_')[1]        
+        try:
+            vid_start_time = datetime.datetime.strptime(cam_time,'%Y%m%d%H%M%S')
+        except:
+            vid_start_time = None
+    
+    with open(out_file_csv, 'w') as csvfile:
+        writer = csv.writer(csvfile)
+        row = []
+        if vid_start_time is not None:
+            row.append('Absolute Time')
+        row += ['Video Time','Side Detection Confidence', 'Front Detection Confidence','Side Box', 'Front Box']
+        
+        writer.writerow(row)
+        for idx_det in range(len(times)):
+            row = []
+            time_curr = datetime.timedelta(seconds = times[idx_det]) 
+            if vid_start_time is not None:
+                time_added = vid_start_time+time_curr
+                row.append(time_added.strftime('%H:%M:%S.%f'))
+                
+            row.append(str(time_curr))
+            row.append(str(det_confs[0][idx_det]))
+            row.append(str(det_confs[1][idx_det]))
+            row.append(str(boxes[0][idx_det]))
+            row.append(str(boxes[1][idx_det]))
+            writer.writerow(row)
+
+
 
 def plot_detections_over_time_new(vid_name, res_dir, fps):
     det_confs, times, boxes = collate_results_for_plotting(vid_name, res_dir, fps)
